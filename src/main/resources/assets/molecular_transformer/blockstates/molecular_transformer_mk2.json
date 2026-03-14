@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "molecular_transformer:block/molecular_transformer_mk2"
+    }
+  }
+}

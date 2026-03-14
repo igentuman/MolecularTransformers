@@ -1,7 +1,12 @@
 package igentuman.mt.block;
 
-import igentuman.mt.Main;
+import igentuman.mt.menu.MolecularTransformerMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -9,24 +14,29 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
-public class MolecularTransformerMk2Block extends BaseEntityBlock {
-    public MolecularTransformerMk2Block() {
+public class MolecularTransformerBlock extends BaseEntityBlock {
+
+    public String identifier;
+
+    public MolecularTransformerBlock(String identifier) {
         super(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.METAL)
-                .strength(5.0f, 10.0f)
+                .strength(3.5f, 8.0f)
                 .requiresCorrectToolForDrops()
                 .noOcclusion());
+        this.identifier = identifier;
     }
 
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
-        return new MolecularTransformerMk2BlockEntity(Main.MOLECULAR_TRANSFORMER_MK2_ENTITY.get(), pPos, pState);
+        return new MolecularTransformerBlockEntity(pPos, pState, identifier);
     }
 
     @Nullable
@@ -37,7 +47,7 @@ public class MolecularTransformerMk2Block extends BaseEntityBlock {
         }
         
         return (level, pos, state, blockEntity) -> {
-            if (blockEntity instanceof MolecularTransformerBlockEntity transformer) {
+            if (blockEntity instanceof AbstractMolecularTransformerBlockEntity transformer) {
                 transformer.tick();
             }
         };
@@ -49,10 +59,30 @@ public class MolecularTransformerMk2Block extends BaseEntityBlock {
     }
 
     @Override
+    public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
+        if (pLevel.isClientSide) {
+            return InteractionResult.SUCCESS;
+        }
+        
+        BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+        if (blockEntity instanceof MolecularTransformerBlockEntity transformer) {
+            ItemStackHandler itemHandler = transformer.getItemHandler();
+            pPlayer.openMenu(new SimpleMenuProvider(
+                    (containerId, playerInventory, playerEntity) -> 
+                            new MolecularTransformerMenu(containerId, playerInventory, itemHandler, identifier),
+                    Component.literal("Molecular Transformer MK1")
+            ));
+            return InteractionResult.CONSUME;
+        }
+        
+        return InteractionResult.PASS;
+    }
+
+    @Override
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (!pState.is(pNewState.getBlock())) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof MolecularTransformerBlockEntity) {
+            if (blockEntity instanceof AbstractMolecularTransformerBlockEntity) {
                 pLevel.removeBlockEntity(pPos);
             }
         }
