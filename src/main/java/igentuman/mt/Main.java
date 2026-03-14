@@ -54,7 +54,7 @@ public class Main
         }
         if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             for(ModEntry entry: ENTRIES.values()) {
-                if(!entry.hasBlock() && !entry.hasItem()) {
+                if(!entry.hasBlock() && entry.hasItem()) {
                     event.accept(entry.item());
                 }
             }
